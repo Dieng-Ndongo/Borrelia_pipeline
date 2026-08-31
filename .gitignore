@@ -31,7 +31,7 @@ results/
 *.vcf.gz.tbi
 *.fna
 *.fna.gz
-*.fasta
+*.fai
 *.sam
  
 # ─── Base Kraken2 ─────────────────────────────────────────────────────────────
