@@ -11,7 +11,7 @@ data/reference/*.fai
 data/reference/*.pac
 data/reference/*.sa 
 data/reference/*.fasta 
- 
+data/reference/16S 
 # ─── Résultats (trop lourds pour GitHub) ─────────────────────────────────────
 qc/
 kraken/
