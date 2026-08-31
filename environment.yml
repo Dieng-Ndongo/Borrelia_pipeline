@@ -1,0 +1,26 @@
+name: borrelia_pipeline
+channels:
+  - conda-forge
+  - bioconda
+  - defaults
+dependencies:
+  - python=3.10
+  - biopython=1.88
+  - fastqc=0.12.1
+  - multiqc=1.21
+  - fastp=0.23.4
+  - kraken2=2.1.3
+  - bracken=3.1
+  - bwa=0.7.18
+  - samtools=1.21
+  - bcftools=1.21
+  - snpEff
+  - blast
+  - htslib=1.21
+  - mafft=7.525
+  - iqtree=2.3.6
+  - seqkit=2.13.0
+  - entrez-direct=22.4
+  - pip
+  # Note : KrakenTools est installé via git clone dans scripts/
+  # voir scripts/install.sh pour les détails
