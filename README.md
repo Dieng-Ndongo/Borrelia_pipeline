@@ -206,7 +206,7 @@ bash scripts/run_pipeline.sh
 | `mapping/` | `*_aligned.bam`, `*_flagstat.txt`, `*_coverage.txt` |
 | `variants/` | `*_variants_filtered.vcf.gz`, `*_consensus.fasta` |
 | `phylogeny/` | `*_tree.treefile`, `*_aligned.fasta` |
-| `results/` | `*_pipeline_log.txt` , `annotation/`, `locus_detection`, `locus_phylogeny`|
+| `results/` | `*_pipeline_log.txt` , `annotation/`, `locus_detection/`, `locus_phylogeny/`|
 
 ---
 
