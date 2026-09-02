@@ -88,28 +88,55 @@ projet_borrelia/
 ## Pipeline
 
 ```
-Données métagénomiques (FASTQ — 2 lanes)
+FASTQ métagénomiques
         │
         ▼
-  Fusion des lanes L001 + L002
+   01 — QC initial
         │
         ▼
-  [Étape 1] Contrôle qualité     → FastQC, Fastp, MultiQC
+     fastp
         │
         ▼
-  [Étape 2] Extraction Borrelia  → Kraken2, Bracken, KrakenTools
+FASTQ nettoyés
+data/clean/
         │
         ▼
-  [Étape 3] Alignement           → BWA mem, Samtools
+02 — Kraken2 + Bracken
         │
         ▼
-  [Étape 4] Variants & Consensus → bcftools
+Identification de Borrelia
         │
         ▼
-  [Étape 5] Phylogénie           → MAFFT, IQ-TREE2, FigTree/iTOL
+Extraction des reads
         │
         ▼
-  Identification du clade Borrelia
+03 — QC des reads Borrelia
+        │
+        ▼
+04 — Mapping
+        │
+        ▼
+BAM + couverture
+        │
+        ├───────────────────────┐
+        │                       │
+        ▼                       ▼
+05 — Variant calling      08 — Locus detection
+        │                       │
+        ▼                       ▼
+VCF + consensus           Loci candidats
+        │                       │
+        ▼                       ▼
+06 — Annotation           09 — Phylogénie locus
+        │                       │
+        │                       ▼
+        │                 Arbre(s) locus
+        │
+        ▼
+07 — Phylogénie génomique
+        │
+        ▼
+    Arbre complet
 ```
 
 ---
