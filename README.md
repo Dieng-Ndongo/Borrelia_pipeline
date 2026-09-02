@@ -1,6 +1,30 @@
-# Pipeline Borrelia
+# Pipeline d'analyse génomique et phylogénétique de Borrelia
 
 > **Extraction et analyse phylogénétique des séquences de *Borrelia crocidurae* à partir de données de séquençage métagénomique**
+Ce projet propose un pipeline bioinformatique dédié à l’identification, l’extraction et l’analyse génomique de Borrelia à partir de données de séquençage métagénomique. Le pipeline est principalement orienté vers l’étude de Borrelia crocidurae et permet de caractériser les séquences détectées, d’identifier les variants génétiques et d’étudier leurs relations phylogénétiques.
+
+Le workflow prend en entrée des lectures de séquençage métagénomique au format FASTQ et suit plusieurs étapes successives : contrôle qualité, nettoyage des lectures, classification taxonomique, extraction des séquences Borrelia, contrôle qualité, alignement sur un génome de référence, détection et annotation des variants, puis analyses phylogénétiques.
+
+La classification taxonomique est réalisée avec Kraken2, complétée par Bracken pour l’estimation de l’abondance taxonomique. Les lectures identifiées comme appartenant à Borrelia sont ensuite extraites afin de limiter les analyses aux séquences d’intérêt.
+
+Les lectures extraites sont alignées sur un génome de référence de B. crocidurae. Les fichiers d’alignement permettent d’évaluer la couverture génomique et servent de base à l’identification des variants. Les variants sont ensuite filtrés et utilisés pour produire des séquences consensus, tandis que l’annotation avec SnpEff permet d’identifier leur impact potentiel sur les régions codantes et les gènes.
+
+Le pipeline comprend également deux approches phylogénétiques complémentaires :
+
+Phylogénie génomique : comparaison des séquences consensus obtenues à partir des échantillons avec des génomes complets de souches de référence de Borrelia.
+Phylogénie ciblée par locus : identification de régions génomiques suffisamment couvertes dans les échantillons, extraction des loci correspondants et comparaison avec des séquences de référence afin de construire des arbres phylogénétiques ciblés.
+
+Les alignements multiples sont réalisés avec MAFFT et les arbres phylogénétiques sont reconstruits avec IQ-TREE, avec estimation du support des branches par bootstrap.
+
+Ainsi, le pipeline permet de passer de données métagénomiques brutes à une caractérisation génomique et phylogénétique des séquences de Borrelia, en combinant détection taxonomique, analyse de couverture, variant calling, annotation et phylogénie.
+
+Workflow général
+
+FASTQ métagénomiques → QC → Trimming → Kraken2/Bracken → Extraction des reads Borrelia → QC → Mapping → Variant calling → Annotation → Phylogénie génomique
+
+En parallèle :
+
+Mapping → Analyse de couverture → Détection des loci → Extraction des loci → Phylogénie ciblée par locus
 
 ---
 
