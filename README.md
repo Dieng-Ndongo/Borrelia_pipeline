@@ -1,8 +1,6 @@
 # Pipeline Borrelia
 
-> **Extraction et analyse phylogénétique des séquences de *Borrelia* à partir de données de séquençage métagénomique**
-
-Stage Bioinformatique — L3 / Master 2
+> **Extraction et analyse phylogénétique des séquences de *Borrelia crocidurae* à partir de données de séquençage métagénomique**
 
 ---
 
@@ -11,22 +9,78 @@ Stage Bioinformatique — L3 / Master 2
 ```
 projet_borrelia/
 ├── data/
-│   ├── raw/                   → fichiers FASTQ bruts (L001/L002)
-│   ├── clean/                 → reads après nettoyage (fastp)
+│   ├── raw/                                        # Sequences netagenomiques
+│   │      
+│   │
+│   ├── clean/                                       # Fastq apres trimming
+│   │       ├── *_R1_clean.fastq.gz
+│   │       └── *_R2_clean.fastq.gz
+│   │
+│   ├── kraken_db/                                   # Base de donnee kraken personaliser
+│   │   
+│   │   
+│   │       
+│   │
 │   └── reference/
-│       └── souches_reference/ → génomes Borrelia NCBI (phylogénie)
-├── qc/                        → rapports FastQC et MultiQC
-├── kraken/                    → classification Kraken2 et reads Borrelia
-├── mapping/                   → fichiers BAM alignés
-├── variants/                  → VCF filtrés et séquences consensus
-├── phylogeny/                 → alignements multiples et arbres
-├── scripts/
-│   ├── pipeline_borrelia.sh   ← pipeline principal
-│   ├── run_all_samples.sh     ← traitement de tous les échantillons
-│   └── install.sh             ← installation des outils
-├── results/                   → logs individuels par échantillon
-├── environment.yml            ← dépendances conda
-└── README.md
+│       ├── Borrelia_crocidurae_Achema                 # Génomes de référence
+|       |
+│       ├── annotation/                                # Base de donnee d'annotation SnpEff
+|       |        
+|       ├── souches_refference/                         # Refference du Base de donnee kraken        
+|       |
+|       ├── phylogeny_genome/                           # Sequences complete de Borrelia
+|       |
+|       └── phylogeny_locus/                            # Sequences de Borrelia du locus detecter 
+|
+|
+│
+├── qc/                                                   # Controle qualites des sequences 
+│   ├── fastqc/
+│   └── multiqc/
+│
+├── kraken/                                                 # Classification, estimation et Borrelia crocidurae   |      ├── *.kraken                                           extraite 
+│      ├── *.report
+│      └── ...                                                  
+│       
+│
+├── mapping/                                                  # Resultats du mapping
+│   ├── bam/
+│   │   └── *.bam
+│   └── coverage/
+│       └── *.txt
+│
+├── variants/                                                   # Resultats du variant calling et consensus
+|
+│
+├── phylogeny/
+|     ├── genome
+|     |                                                # Resultats de la pylogenie par genome cpmplet
+|     └── locus                                        # Resultats de la phylogenie par locus              
+|
+|
+│
+├── scripts/                                            # Scripts du pipeline
+│   ├── install.sh                                     
+│   ├── run_pipeline.sh                                  
+│   ├── 01_qc.sh                                         
+|   ├── 02_kraken.sh                                        
+│   ├── 03_qc_borrelia.sh
+|   ├── 04_mapping.sh
+│   ├── 05_variants.sh
+|   ├── 06_annotation.sh
+│   ├── 07_genome_phylogeny.sh
+│   ├── 08_locus_detection.sh
+│   └── 09_locus_phylogeny.sh
+│
+├── results/
+|     ├── logs/                                           # Journeaux d'execution
+|     ├── annotation/                                     # Resultats de l'annotation
+|     ├── locus_detection                                 # Resultats du locus detection
+|     └── locus+phylogeny                                 # Resultas du locus phylogeny
+|
+├── environment.yml                                        # Outils du pipeline
+├── README.md                                              # Presentation et explication du pipeline
+└── .gitignore                                             # dossiers et fichiers exclus du depot
 ```
 
 ---
