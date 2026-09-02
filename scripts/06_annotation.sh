@@ -503,6 +503,7 @@ log_step "13 — ANNOTATION DES VARIANTS"
 
 TOTAL=${#VCF_FILES[@]}
 SUCCESS=0
+NO_VARIANT=0
 FAILED=0
 
 for VCF in "${VCF_FILES[@]}"; do
@@ -562,15 +563,12 @@ for VCF in "${VCF_FILES[@]}"; do
     log_info "Variants en entrée : $N_INPUT"
 
     if [[ "$N_INPUT" -eq 0 ]]; then
+        log_warning "Le VCF ne contient aucun variant à annoter."
+        log_info "Échantillon valide — aucune annotation nécessaire."
 
-        log_warning "Le VCF ne contient aucun variant."
-
-        FAILED=$((FAILED + 1))
-
+        NO_VARIANT=$((NO_VARIANT + 1))
         continue
-
     fi
-
     # -------------------------------------------------------------------------
     # Nettoyage d'anciennes sorties
     # -------------------------------------------------------------------------
@@ -779,9 +777,10 @@ done
 log_step "14 — RÉSUMÉ"
 
 echo
-echo "VCF détectés          : $TOTAL"
-echo -e "Annotations réussies  : ${GREEN}$SUCCESS${NC}"
-echo -e "Annotations échouées  : ${RED}$FAILED${NC}"
+echo "VCF détectés              : $TOTAL"
+echo -e "Annotations réussies      : ${GREEN}$SUCCESS${NC}"
+echo -e "Sans variants à annoter   : ${YELLOW}$NO_VARIANT${NC}"
+echo -e "Annotations échouées      : ${RED}$FAILED${NC}"
 
 echo
 echo "Résultats :"
@@ -817,23 +816,26 @@ echo "  TSV         : $N_TSV"
 # Vérification de cohérence
 # -------------------------------------------------------------------------
 
-if [[ "$SUCCESS" -eq "$TOTAL" ]]; then
+if [[ "$FAILED" -gt 0 ]]; then
 
     echo
-    log_success "Toutes les annotations sont terminées avec succès."
+    log_error "Une ou plusieurs annotations ont réellement échoué.
+
+Consultez les logs :
+    $RESULTS_DIR"
 
 elif [[ "$SUCCESS" -gt 0 ]]; then
 
     echo
-    log_warning "Certaines annotations ont réussi et d'autres ont échoué."
+    log_success "Annotation terminée."
+    log_info "$SUCCESS annotation(s) réalisée(s), $NO_VARIANT VCF sans variant."
 
 else
 
     echo
-    log_error "Aucune annotation n'a réussi.
-
-Consultez les logs :
-    $RESULTS_DIR"
+    log_success "Aucun variant à annoter."
+    log_info "Les VCF sont valides mais ne contiennent aucun variant."
+    log_info "L'étape d'annotation est considérée comme terminée."
 
 fi
 
