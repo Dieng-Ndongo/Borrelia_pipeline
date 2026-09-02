@@ -146,8 +146,8 @@ VCF + consensus           Loci candidats
 ### 1. Cloner le dépôt
 
 ```bash
-git clone https://github.com/<username>/projet_borrelia.git
-cd projet_borrelia
+git clone https://github.com/Dieng-Ndongo/Borrelia_pipeline
+cd Borrelia_pipeline
 ```
 
 ### 2. Installer les outils
@@ -185,27 +185,14 @@ data/raw/
 ├── sample1_L001_R2.fastq.gz
 ├── sample1_L002_R1.fastq.gz
 ├── sample1_L002_R2.fastq.gz
-├── sample2_L001_R1.fastq.gz
 └── ...
 ```
 
-### Un seul échantillon
+### Execution
 
 ```bash
 conda activate borrelia_pipeline
-
-bash scripts/pipeline_borrelia.sh \
-    data/raw/sample_L001_R1.fastq.gz \
-    data/raw/sample_L001_R2.fastq.gz \
-    data/raw/sample_L002_R1.fastq.gz \
-    data/raw/sample_L002_R2.fastq.gz
-```
-
-### Tous les échantillons d'un coup
-
-```bash
-conda activate borrelia_pipeline
-bash scripts/run_all_samples.sh
+bash scripts/run_pipeline.sh
 ```
 
 ---
@@ -254,5 +241,4 @@ Ou en ligne : [https://itol.embl.de](https://itol.embl.de)
 
 ## Auteurs
 
-- **Stagiaire** : Étudiante L3 Bioinformatique
-- **Encadrant** : Ndongo — Master 2 Bioinformatique
+Ndongo Dieng — Master 2 Bioinformatique
