@@ -201,12 +201,12 @@ bash scripts/run_pipeline.sh
 
 | Dossier | Fichiers produits |
 |---|---|
-| `qc/` | `*_multiqc_report.html`, `*_fastp_report.html` |
+| `qc/` | `*_multiqc_report.html`, `*_fastqc_report.html`, `*_fastp_report.html` |
 | `kraken/` | `*_kraken_report.txt`, `*_borrelia_R1/R2.fastq` |
 | `mapping/` | `*_aligned.bam`, `*_flagstat.txt`, `*_coverage.txt` |
 | `variants/` | `*_variants_filtered.vcf.gz`, `*_consensus.fasta` |
 | `phylogeny/` | `*_tree.treefile`, `*_aligned.fasta` |
-| `results/` | `*_pipeline_log.txt` |
+| `results/` | `*_pipeline_log.txt` , `annotation/`, `locus_detection`, `locus_phylogeny`|
 
 ---
 
