@@ -72,7 +72,7 @@ ENV_NAME="borrelia_pipeline"
 
 VARIANTS_DIR="variants"
 
-REF_SOUCHES="data/reference/souches_reference"
+REF_SOUCHES="data/reference/phylogeny_genome"
 
 # -------------------------------------------------------------------------
 # Organisation des résultats

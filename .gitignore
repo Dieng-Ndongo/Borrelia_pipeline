@@ -9,8 +9,7 @@ data/reference/*.ann
 data/reference/*.bwt
 data/reference/*.fai
 data/reference/*.pac
-data/reference/*.sa 
-data/reference/*.fasta 
+data/reference/*.sa
 data/reference/16S 
 # ─── Résultats (trop lourds pour GitHub) ─────────────────────────────────────
 qc/
