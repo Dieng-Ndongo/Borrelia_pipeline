@@ -18,6 +18,7 @@ mapping/
 variants/
 phylogeny/
 results/
+krakentools/
  
 # ─── Formats lourds ───────────────────────────────────────────────────────────
 *.fastq
