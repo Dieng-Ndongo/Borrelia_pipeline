@@ -3,18 +3,19 @@
 # 01_qc.sh
 # CONTRÔLE QUALITÉ — Tous les échantillons
 #
-# Entrée :
-#   data/raw/*_L001_R1_001.fastq.gz
-#   data/raw/*_L001_R2_001.fastq.gz
-#   data/raw/*_L002_R1_001.fastq.gz
-#   data/raw/*_L002_R2_001.fastq.gz
+# Entrée (multi-lane ou single-lane) :
+#   data/raw/*_L001_R1_001.fastq.gz   (obligatoire)
+#   data/raw/*_L001_R2_001.fastq.gz   (obligatoire)
+#   data/raw/*_L002_R1_001.fastq.gz   (optionnel)
+#   data/raw/*_L002_R2_001.fastq.gz   (optionnel)
 #
 # Sorties :
 #   data/raw/*_merged_R1.fastq.gz
 #   data/raw/*_merged_R2.fastq.gz
 #   data/clean/*_R1_clean.fastq.gz
 #   data/clean/*_R2_clean.fastq.gz
-#   qc/*
+#   qc/pre_merge/   — FastQC L001 brut (multi-lane uniquement)
+#   qc/post_merge/  — FastQC après fusion + fastp
 # =============================================================================
 
 set -euo pipefail
@@ -47,9 +48,9 @@ if [[ "${CONDA_DEFAULT_ENV:-}" != "$ENV_NAME" ]]; then
     log_error "Activez l'environnement : conda activate $ENV_NAME"
 fi
 
-mkdir -p data/raw data/clean qc results
+mkdir -p data/raw data/clean qc/pre_merge qc/post_merge results
 
-if [[ $(find data/raw -maxdepth 1 -name "*.fastq.gz" | wc -l) -eq 0 ]]; then
+if [[ $(find data/raw -maxdepth 1 -name "*_R1_001.fastq.gz" | grep -v "_merged_" | wc -l) -eq 0 ]]; then
     log_error "Aucun fichier .fastq.gz trouvé dans data/raw/"
 fi
 
@@ -65,20 +66,23 @@ done
 
 log_step "Détection des échantillons"
 
+declare -A SEEN_SAMPLES
 SAMPLES=()
 
 while IFS= read -r file; do
-    SAMPLE=$(basename "$file" "_L001_R1_001.fastq.gz")
-    SAMPLES+=("$SAMPLE")
+    SAMPLE=$(basename "$file" | sed 's/_L00[0-9]\{1\}_R1_001\.fastq\.gz$//')
+    if [[ -z "${SEEN_SAMPLES[$SAMPLE]+_}" ]]; then
+        SEEN_SAMPLES[$SAMPLE]=1
+        SAMPLES+=("$SAMPLE")
+    fi
 done < <(find data/raw -maxdepth 1 -type f \
-    -name "*_L001_R1_001.fastq.gz" | sort)
+    -name "*_R1_001.fastq.gz" | grep -v "_merged_" | sort)
 
 if [[ ${#SAMPLES[@]} -eq 0 ]]; then
     log_error "Aucun échantillon détecté dans data/raw/"
 fi
 
 log_info "${#SAMPLES[@]} échantillon(s) détecté(s) :"
-
 for SAMPLE in "${SAMPLES[@]}"; do
     echo "    - $SAMPLE"
 done
@@ -96,29 +100,69 @@ for SAMPLE in "${SAMPLES[@]}"; do
     L002_R1="data/raw/${SAMPLE}_L002_R1_001.fastq.gz"
     L002_R2="data/raw/${SAMPLE}_L002_R2_001.fastq.gz"
 
-    for FILE in "$L001_R1" "$L001_R2" "$L002_R1" "$L002_R2"; do
+    # Fichiers L001 obligatoires
+    for FILE in "$L001_R1" "$L001_R2"; do
         [[ -f "$FILE" ]] || log_error "Fichier introuvable : $FILE"
     done
+
+    # Détection L002
+    HAS_L002=false
+    if [[ -f "$L002_R1" && -f "$L002_R2" ]]; then
+        HAS_L002=true
+        log_info "Lane L002 détectée — QC pre-merge + fusion activés."
+    elif [[ -f "$L002_R1" || -f "$L002_R2" ]]; then
+        log_warning "Lane L002 incomplète pour $SAMPLE (R1 ou R2 manquant) — ignorée."
+    else
+        log_info "Lane unique détectée pour $SAMPLE."
+    fi
 
     R1_RAW="data/raw/${SAMPLE}_merged_R1.fastq.gz"
     R2_RAW="data/raw/${SAMPLE}_merged_R2.fastq.gz"
 
     # -------------------------------------------------------------------------
-    # Fusion des lanes
+    # QC PRE-MERGE sur L001 (multi-lane uniquement)
+    # -------------------------------------------------------------------------
+
+    if $HAS_L002; then
+        log_step "QC pre-merge (L001) — $SAMPLE"
+        log_info "FastQC sur L001 brut..."
+
+        fastqc \
+            "$L001_R1" \
+            "$L001_R2" \
+            -o qc/pre_merge \
+            -t 8 \
+            --quiet
+
+        log_success "$SAMPLE : QC pre-merge L001 terminé"
+    fi
+
+    # -------------------------------------------------------------------------
+    # Fusion des lanes (ou lien symbolique si lane unique)
     # -------------------------------------------------------------------------
 
     if [[ ! -f "$R1_RAW" ]]; then
-        log_info "Fusion des lanes R1..."
-        cat "$L001_R1" "$L002_R1" > "$R1_RAW"
+        if $HAS_L002; then
+            log_info "Fusion des lanes R1..."
+            cat "$L001_R1" "$L002_R1" > "$R1_RAW"
+        else
+            log_info "Lane unique — lien symbolique R1..."
+            ln -sf "$(realpath "$L001_R1")" "$R1_RAW"
+        fi
     else
-        log_info "R1 fusionné déjà présent."
+        log_info "R1 déjà présent."
     fi
 
     if [[ ! -f "$R2_RAW" ]]; then
-        log_info "Fusion des lanes R2..."
-        cat "$L001_R2" "$L002_R2" > "$R2_RAW"
+        if $HAS_L002; then
+            log_info "Fusion des lanes R2..."
+            cat "$L001_R2" "$L002_R2" > "$R2_RAW"
+        else
+            log_info "Lane unique — lien symbolique R2..."
+            ln -sf "$(realpath "$L001_R2")" "$R2_RAW"
+        fi
     else
-        log_info "R2 fusionné déjà présent."
+        log_info "R2 déjà présent."
     fi
 
     # -------------------------------------------------------------------------
@@ -139,15 +183,16 @@ for SAMPLE in "${SAMPLES[@]}"; do
     fi
 
     # -------------------------------------------------------------------------
-    # FastQC brut
+    # QC POST-MERGE — FastQC sur reads fusionnés bruts
     # -------------------------------------------------------------------------
 
-    log_info "FastQC des reads bruts..."
+    log_step "QC post-merge (brut) — $SAMPLE"
+    log_info "FastQC des reads fusionnés bruts..."
 
     fastqc \
         "$R1_RAW" \
         "$R2_RAW" \
-        -o qc \
+        -o qc/post_merge \
         -t 8 \
         --quiet
 
@@ -165,8 +210,8 @@ for SAMPLE in "${SAMPLES[@]}"; do
         -I "$R2_RAW" \
         -o "$R1_CLEAN" \
         -O "$R2_CLEAN" \
-        --html "qc/${SAMPLE}_fastp_report.html" \
-        --json "qc/${SAMPLE}_fastp_report.json" \
+        --html "qc/post_merge/${SAMPLE}_fastp_report.html" \
+        --json "qc/post_merge/${SAMPLE}_fastp_report.json" \
         --thread 8 \
         --qualified_quality_phred 20 \
         --length_required 50 \
@@ -174,7 +219,7 @@ for SAMPLE in "${SAMPLES[@]}"; do
         2> "results/${SAMPLE}_fastp.log"
 
     # -------------------------------------------------------------------------
-    # FastQC nettoyé
+    # FastQC post-fastp
     # -------------------------------------------------------------------------
 
     log_info "FastQC des reads nettoyés..."
@@ -182,7 +227,7 @@ for SAMPLE in "${SAMPLES[@]}"; do
     fastqc \
         "$R1_CLEAN" \
         "$R2_CLEAN" \
-        -o qc \
+        -o qc/post_merge \
         -t 8 \
         --quiet
 
@@ -196,10 +241,22 @@ done
 
 log_step "MultiQC — Tous les échantillons"
 
-multiqc qc/ \
-    -o qc/ \
+# MultiQC pre-merge (uniquement si des rapports existent)
+if [[ $(find qc/pre_merge -maxdepth 1 -name "*.zip" | wc -l) -gt 0 ]]; then
+    log_info "MultiQC pre-merge..."
+    multiqc qc/pre_merge/ \
+        -o qc/pre_merge/ \
+        --quiet \
+        --filename "multiqc_pre_merge"
+    log_success "Rapport pre-merge : qc/pre_merge/multiqc_pre_merge.html"
+fi
+
+# MultiQC post-merge
+log_info "MultiQC post-merge..."
+multiqc qc/post_merge/ \
+    -o qc/post_merge/ \
     --quiet \
-    --filename "multiqc_all_samples"
+    --filename "multiqc_post_merge"
 
 log_success "QC terminé pour tous les échantillons"
-log_success "Rapport : qc/multiqc_all_samples.html"
+log_success "Rapport post-merge : qc/post_merge/multiqc_post_merge.html"
