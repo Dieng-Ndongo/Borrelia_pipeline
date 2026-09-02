@@ -1,8 +1,32 @@
-# Pipeline Borrelia
+# Pipeline d'analyse génomique et phylogénétique de *Borrelia*
 
-> **Extraction et analyse phylogénétique des séquences de *Borrelia* à partir de données de séquençage métagénomique**
+> **Extraction et analyse phylogénétique des séquences de *Borrelia crocidurae* à partir de données de séquençage métagénomique**
 
-Stage Bioinformatique — L3 / Master 2
+Ce projet propose un pipeline bioinformatique dédié à l’identification, l’extraction et l’analyse génomique et phylogénétique de *Borrelia* à partir de données de séquençage métagénomique. Le pipeline est principalement orienté vers l’étude de *Borrelia crocidurae* et permet de caractériser les séquences détectées, d’évaluer leur couverture génomique, d’identifier les variants génétiques et d’étudier leurs relations phylogénétiques.
+
+Le workflow prend en entrée des lectures de séquençage métagénomique au format FASTQ et suit plusieurs étapes successives : contrôle qualité, nettoyage des lectures, classification taxonomique, extraction des séquences de *Borrelia*, contrôle qualité des reads extraits, alignement sur un génome de référence, analyse de la couverture, détection et annotation des variants, puis analyses phylogénétiques.
+
+La classification taxonomique est réalisée avec **Kraken2**, complétée par **Bracken** pour l’estimation de l’abondance taxonomique. Les lectures identifiées comme appartenant à *Borrelia* sont ensuite extraites afin de limiter les analyses aux séquences d’intérêt, en particulier celles attribuées à *B. crocidurae*.
+
+Les lectures extraites sont alignées sur un génome de référence de *B. crocidurae*. Les fichiers d’alignement permettent d’évaluer la couverture génomique et servent de base à l’identification des variants. Les variants détectés sont ensuite filtrés et utilisés pour produire des séquences consensus. L’annotation avec **SnpEff** permet ensuite de caractériser les variants selon leur localisation génomique et leur effet potentiel sur les gènes et les régions codantes.
+
+Le pipeline comprend également **deux approches phylogénétiques complémentaires** :
+
+- **Phylogénie génomique** : comparaison des séquences consensus obtenues à partir des échantillons avec des génomes complets de souches de référence de *Borrelia* afin d’étudier les relations phylogénétiques à l’échelle du génome.
+
+- **Phylogénie ciblée par locus** : identification des régions génomiques suffisamment couvertes dans les échantillons, extraction des loci correspondants et comparaison avec des séquences de référence afin de construire des arbres phylogénétiques ciblés.
+
+Les alignements multiples sont réalisés avec **MAFFT** et les arbres phylogénétiques sont reconstruits avec **IQ-TREE**, avec estimation du support des branches par bootstrap.
+
+Ainsi, ce pipeline permet de passer de données métagénomiques brutes à une caractérisation génomique et phylogénétique des séquences de *Borrelia*, en combinant **contrôle qualité, classification taxonomique, extraction des reads, mapping, analyse de couverture, variant calling, annotation et reconstruction phylogénétique**.
+
+## Workflow général
+
+**FASTQ métagénomiques → QC → Trimming → Kraken2/Bracken → Extraction des reads *Borrelia* → QC → Mapping → Analyse de couverture → Variant calling → Annotation → Phylogénie génomique**
+
+En parallèle :
+
+**Mapping → Analyse de couverture → Détection des loci → Extraction des loci → Phylogénie ciblée par locus**
 
 ---
 
@@ -11,22 +35,78 @@ Stage Bioinformatique — L3 / Master 2
 ```
 projet_borrelia/
 ├── data/
-│   ├── raw/                   → fichiers FASTQ bruts (L001/L002)
-│   ├── clean/                 → reads après nettoyage (fastp)
+│   ├── raw/                                        # Sequences netagenomiques
+│   │      
+│   │
+│   ├── clean/                                       # Fastq apres trimming
+│   │       ├── *_R1_clean.fastq.gz
+│   │       └── *_R2_clean.fastq.gz
+│   │
+│   ├── kraken_db/                                   # Base de donnee kraken personaliser
+│   │   
+│   │   
+│   │       
+│   │
 │   └── reference/
-│       └── souches_reference/ → génomes Borrelia NCBI (phylogénie)
-├── qc/                        → rapports FastQC et MultiQC
-├── kraken/                    → classification Kraken2 et reads Borrelia
-├── mapping/                   → fichiers BAM alignés
-├── variants/                  → VCF filtrés et séquences consensus
-├── phylogeny/                 → alignements multiples et arbres
-├── scripts/
-│   ├── pipeline_borrelia.sh   ← pipeline principal
-│   ├── run_all_samples.sh     ← traitement de tous les échantillons
-│   └── install.sh             ← installation des outils
-├── results/                   → logs individuels par échantillon
-├── environment.yml            ← dépendances conda
-└── README.md
+│       ├── Borrelia_crocidurae_Achema                 # Génomes de référence
+|       |
+│       ├── annotation/                                # Base de donnee d'annotation SnpEff
+|       |        
+|       ├── souches_refference/                         # Refference du Base de donnee kraken        
+|       |
+|       ├── phylogeny_genome/                           # Sequences complete de Borrelia
+|       |
+|       └── phylogeny_locus/                            # Sequences de Borrelia du locus detecter 
+|
+|
+│
+├── qc/                                                   # Controle qualites des sequences 
+│   ├── fastqc/
+│   └── multiqc/
+│
+├── kraken/                                                 # Classification, estimation et Borrelia crocidurae   |      ├── *.kraken                                           extraite 
+│      ├── *.report
+│      └── ...                                                  
+│       
+│
+├── mapping/                                                  # Resultats du mapping
+│   ├── bam/
+│   │   └── *.bam
+│   └── coverage/
+│       └── *.txt
+│
+├── variants/                                                   # Resultats du variant calling et consensus
+|
+│
+├── phylogeny/
+|     ├── genome
+|     |                                                # Resultats de la pylogenie par genome cpmplet
+|     └── locus                                        # Resultats de la phylogenie par locus              
+|
+|
+│
+├── scripts/                                            # Scripts du pipeline
+│   ├── install.sh                                     
+│   ├── run_pipeline.sh                                  
+│   ├── 01_qc.sh                                         
+|   ├── 02_kraken.sh                                        
+│   ├── 03_qc_borrelia.sh
+|   ├── 04_mapping.sh
+│   ├── 05_variants.sh
+|   ├── 06_annotation.sh
+│   ├── 07_genome_phylogeny.sh
+│   ├── 08_locus_detection.sh
+│   └── 09_locus_phylogeny.sh
+│
+├── results/
+|     ├── logs/                                           # Journeaux d'execution
+|     ├── annotation/                                     # Resultats de l'annotation
+|     ├── locus_detection                                 # Resultats du locus detection
+|     └── locus+phylogeny                                 # Resultas du locus phylogeny
+|
+├── environment.yml                                        # Outils du pipeline
+├── README.md                                              # Presentation et explication du pipeline
+└── .gitignore                                             # dossiers et fichiers exclus du depot
 ```
 
 ---
@@ -34,28 +114,55 @@ projet_borrelia/
 ## Pipeline
 
 ```
-Données métagénomiques (FASTQ — 2 lanes)
+FASTQ métagénomiques
         │
         ▼
-  Fusion des lanes L001 + L002
+   01 — QC initial
         │
         ▼
-  [Étape 1] Contrôle qualité     → FastQC, Fastp, MultiQC
+     fastp
         │
         ▼
-  [Étape 2] Extraction Borrelia  → Kraken2, Bracken, KrakenTools
+FASTQ nettoyés
+data/clean/
         │
         ▼
-  [Étape 3] Alignement           → BWA mem, Samtools
+02 — Kraken2 + Bracken
         │
         ▼
-  [Étape 4] Variants & Consensus → bcftools
+Identification de Borrelia
         │
         ▼
-  [Étape 5] Phylogénie           → MAFFT, IQ-TREE2, FigTree/iTOL
+Extraction des reads
         │
         ▼
-  Identification du clade Borrelia
+03 — QC des reads Borrelia
+        │
+        ▼
+04 — Mapping
+        │
+        ▼
+BAM + couverture
+        │
+        ├───────────────────────┐
+        │                       │
+        ▼                       ▼
+05 — Variant calling      08 — Locus detection
+        │                       │
+        ▼                       ▼
+VCF + consensus           Loci candidats
+        │                       │
+        ▼                       ▼
+06 — Annotation           09 — Phylogénie locus
+        │                       │
+        │                       ▼
+        │                 Arbre(s) locus
+        │
+        ▼
+07 — Phylogénie génomique
+        │
+        ▼
+    Arbre complet
 ```
 
 ---
@@ -65,8 +172,8 @@ Données métagénomiques (FASTQ — 2 lanes)
 ### 1. Cloner le dépôt
 
 ```bash
-git clone https://github.com/<username>/projet_borrelia.git
-cd projet_borrelia
+git clone https://github.com/Dieng-Ndongo/Borrelia_pipeline
+cd Borrelia_pipeline
 ```
 
 ### 2. Installer les outils
@@ -104,27 +211,14 @@ data/raw/
 ├── sample1_L001_R2.fastq.gz
 ├── sample1_L002_R1.fastq.gz
 ├── sample1_L002_R2.fastq.gz
-├── sample2_L001_R1.fastq.gz
 └── ...
 ```
 
-### Un seul échantillon
+### Execution
 
 ```bash
 conda activate borrelia_pipeline
-
-bash scripts/pipeline_borrelia.sh \
-    data/raw/sample_L001_R1.fastq.gz \
-    data/raw/sample_L001_R2.fastq.gz \
-    data/raw/sample_L002_R1.fastq.gz \
-    data/raw/sample_L002_R2.fastq.gz
-```
-
-### Tous les échantillons d'un coup
-
-```bash
-conda activate borrelia_pipeline
-bash scripts/run_all_samples.sh
+bash scripts/run_pipeline.sh
 ```
 
 ---
@@ -133,12 +227,12 @@ bash scripts/run_all_samples.sh
 
 | Dossier | Fichiers produits |
 |---|---|
-| `qc/` | `*_multiqc_report.html`, `*_fastp_report.html` |
+| `qc/` | `*_multiqc_report.html`, `*_fastqc_report.html`, `*_fastp_report.html` |
 | `kraken/` | `*_kraken_report.txt`, `*_borrelia_R1/R2.fastq` |
 | `mapping/` | `*_aligned.bam`, `*_flagstat.txt`, `*_coverage.txt` |
 | `variants/` | `*_variants_filtered.vcf.gz`, `*_consensus.fasta` |
 | `phylogeny/` | `*_tree.treefile`, `*_aligned.fasta` |
-| `results/` | `*_pipeline_log.txt` |
+| `results/` | `*_pipeline_log.txt` , `annotation/`, `locus_detection/`, `locus_phylogeny/`|
 
 ---
 
@@ -173,5 +267,4 @@ Ou en ligne : [https://itol.embl.de](https://itol.embl.de)
 
 ## Auteurs
 
-- **Stagiaire** : Étudiante L3 Bioinformatique
-- **Encadrant** : Ndongo — Master 2 Bioinformatique
+Ndongo Dieng — Master 2 Bioinformatique
