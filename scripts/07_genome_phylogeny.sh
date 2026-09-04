@@ -103,13 +103,27 @@ BOOTSTRAP=1000
 # -------------------------------------------------------------------------
 # OUTGROUP
 #
-# Identifiant EXACT présent dans le fichier FASTA.
-#
-# >B_miyamotoi|Asie_Japon|FR64b_CP004217
+# Détection dynamique de B. crocidurae souche Achema
+# depuis les fichiers de référence (REF_SOUCHES).
 #
 # -------------------------------------------------------------------------
 
-OUTGROUP_ID="B_miyamotoi|Asie_Japon|FR64b_CP004217"
+OUTGROUP_ID="$(
+    grep '^>' "${REF_SOUCHES}"/*.fasta \
+              "${REF_SOUCHES}"/*.fa \
+              "${REF_SOUCHES}"/*.fas \
+              "${REF_SOUCHES}"/*.fna \
+        2>/dev/null \
+    | sed 's/^[^:]*:>//' \
+    | grep -i 'achema' \
+    | head -n 1 \
+    || true
+)"
+
+if [[ -z "${OUTGROUP_ID}" ]]; then
+    echo -e "${RED}[ERREUR]${NC}  Outgroup B. crocidurae Achema introuvable dans ${REF_SOUCHES}/"
+    exit 1
+fi
 
 # =============================================================================
 # 1. VÉRIFICATION DE L'ENVIRONNEMENT
