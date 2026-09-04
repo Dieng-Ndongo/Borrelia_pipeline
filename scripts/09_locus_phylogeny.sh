@@ -1083,13 +1083,12 @@ TREE_PREFIX="${TREE_DIR}/borrelia_crocidurae_${BEST_LOCUS}"
  
 # -------------------------------------------------------------------------
 # Détection dynamique de l'outgroup :
-# On cherche la première séquence "miyamotoi" dans le FASTA combiné.
-# Cela évite tout hardcoding du nom exact de la souche.
+# On cherche la séquence B. crocidurae souche Achema dans le FASTA combiné.
 # -------------------------------------------------------------------------
 OUTGROUP_ID="$(
     grep '^>' "${COMBINED}" \
     | sed 's/^>//' \
-    | grep -i 'miyamotoi' \
+    | grep -i 'achema' \
     | head -n 1 \
     || true
 )"
@@ -1117,7 +1116,7 @@ if [[ -n "${OUTGROUP_ID}" ]]; then
  
 else
  
-    warn "Aucune séquence miyamotoi dans le FASTA."
+    warn "Aucune séquence B. crocidurae Achema dans le FASTA."
     warn "L'arbre sera construit sans enracinement explicite."
  
     progress "IQ-TREE → construction de l'arbre ${BEST_LOCUS}..."
